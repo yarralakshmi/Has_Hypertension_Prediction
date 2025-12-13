@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Hypertension Risk Assessment</title>
+
+<style>
+/* ===== GLOBAL ===== */
+body {
+    font-family: "Segoe UI", Tahoma, sans-serif;
+    background: linear-gradient(135deg, #74ebd5, #acb6e5, #fbc2eb);
+    
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* ===== CARD ===== */
+.card {
+    background: white;
+    padding: 0;
+    border-radius: 18px;
+    width: 500px;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.25);
+    overflow: hidden;
+}
+
+/* ===== HEADER ===== */
+.form-header {
+    background: linear-gradient(to right, #36d1dc, #5b86e5);
+    padding: 18px;
+}
+
+.form-header h2 {
+    margin: 0;
+    color: white;
+    text-align: center;
+}
+
+/* ===== CONTENT ===== */
+.card-content {
+    padding: 30px;
+}
+
+/* ===== TEXT ===== */
+h2, h3 {
+    text-align: center;
+    color: #2c3e50;
+}
+
+p {
+    text-align: center;
+    color: #555;
+    font-size: 15px;
+}
+
+/* ===== FORM ===== */
+label {
+    font-weight: 600;
+    margin-top: 12px;
+    display: block;
+    color: #34495e;
+}
+
+input, select {
+    width: 100%;
+    padding: 9px;
+    margin-top: 5px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+}
+
+/* ===== BUTTON ===== */
+button {
+    width: 100%;
+    margin-top: 20px;
+    padding: 12px;
+    font-size: 16px;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    background: linear-gradient(to right, #36d1dc, #5b86e5);
+    color: white;
+}
+
+button:hover {
+    opacity: 0.9;
+}
+
+/* ===== RESULT ===== */
+.result {
+    margin-top: 20px;
+    padding: 18px;
+    border-radius: 12px;
+    font-size: 15px;
+}
+
+/* ===== UTILITY ===== */
+.hidden {
+    display: none;
+}
+
+ul {
+    margin-top: 5px;
+}
+</style>
+</head>
+
+<body>
+
+<!-- ===== WELCOME ===== -->
+<div class="card" id="welcome">
+    <div class="card-content">
+        <h2>👋 Welcome Human!</h2>
+        <p>Let’s check if your BP is chill 😎 or needs attention 💊</p>
+        <p>
+            This application helps you understand your risk of hypertension
+            based on lifestyle and health factors.
+        </p>
+        <p>
+            Results are for awareness purposes only and not a medical diagnosis.
+        </p>
+        
+        <button onclick="start()">Start Assessment</button>
+    </div>
+</div>
+
+<!-- ===== FORM ===== -->
+<div class="card hidden" id="form">
+
+<header class="form-header">
+    <h2>🩺 Health Information</h2>
+</header>
+
+<div class="card-content">
+
+<label>Age</label>
+<input type="number" id="age" placeholder="Enter your age">
+
+<label>Salt Intake</label>
+<select id="salt">
+<option disabled selected>Select</option>
+<option value="2">Low</option>
+<option value="5">Moderate</option>
+<option value="8">High</option>
+</select>
+
+<label>Stress Level</label>
+<select id="stress">
+<option disabled selected>Select</option>
+<option value="5">Low</option>
+<option value="10">Moderate</option>
+<option value="18">High</option>
+</select>
+
+<label>Physical Activity</label>
+<select id="activity">
+<option disabled selected>Select</option>
+<option value="5">Regular</option>
+<option value="3">Occasional</option>
+<option value="0">None</option>
+</select>
+
+<label>BMI Category</label>
+<select id="bmi">
+<option disabled selected>Select</option>
+<option value="22">Normal</option>
+<option value="28">Overweight</option>
+<option value="35">Obese</option>
+</select>
+
+<label>Alcohol Consumption</label>
+<select id="alcohol">
+<option disabled selected>Select</option>
+<option value="0">No</option>
+<option value="1">Occasional</option>
+<option value="3">Regular</option>
+</select>
+
+<label>Sleep Duration</label>
+<select id="sleep">
+<option disabled selected>Select</option>
+<option value="8">7–8 hours</option>
+<option value="6">5–6 hours</option>
+<option value="4">Less than 5 hours</option>
+</select>
+
+<label>Diet Quality</label>
+<select id="diet">
+<option disabled selected>Select</option>
+<option value="5">Healthy</option>
+<option value="3">Average</option>
+<option value="1">Unhealthy</option>
+</select>
+
+<label>Family History</label>
+<select id="family">
+<option disabled selected>Select</option>
+<option value="0">No</option>
+<option value="1">Yes</option>
+</select>
+
+<label>Smoking Status</label>
+<select id="smoking">
+<option disabled selected>Select</option>
+<option value="0">Non-Smoker</option>
+<option value="1">Smoker</option>
+</select>
+
+<button onclick="predict()">Check Risk</button>
+
+<div id="result" class="result"></div>
+
+</div>
+</div>
+
+<script>
+function start() {
+    welcome.classList.add("hidden");
+    form.classList.remove("hidden");
+}
+
+function predict() {
+fetch("http://127.0.0.1:5000/predict", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({
+        Age: Number(age.value),
+        Salt_Intake: Number(salt.value),
+        Stress_Score: Number(stress.value),
+        Physical_Activity: Number(activity.value),
+        BMI: Number(bmi.value),
+        Alcohol_Consumption: Number(alcohol.value),
+        Sleep_Duration: Number(sleep.value),
+        Diet_Quality: Number(diet.value),
+        Family_History: Number(family.value),
+        Smoking_Status: Number(smoking.value)
+    })
+})
+.then(res => res.json())
+.then(data => {
+    let r = document.getElementById("result");
+
+    if (data.prediction.includes("Has")) {
+        r.style.background = "#fdecea";
+        r.style.color = "#c0392b";
+        r.innerHTML = `
+        <b>⚠ Hypertension Risk Detected</b><br><br>
+        <b>Possible Reasons:</b>
+        <ul>
+            <li>High salt intake</li>
+            <li>Low physical activity</li>
+            <li>High stress and poor sleep</li>
+            <li>Unhealthy diet</li>
+            <li>Smoking or alcohol consumption</li>
+        </ul>
+        <b>Balanced Diet Suggestions:</b>
+        <ul>
+            <li>Fruits: Apple, banana, citrus fruits</li>
+            <li>Vegetables: Spinach, carrot, broccoli</li>
+            <li>Whole grains: Oats, brown rice</li>
+            <li>Low-fat dairy products</li>
+            <li>Reduce salt and processed foods</li>
+        </ul>
+        <b>Lifestyle Tips:</b>
+        <ul>
+            <li>Walk or exercise 30 minutes daily</li>
+            <li>Practice yoga or meditation</li>
+            <li>Quit smoking and limit alcohol</li>
+            <li>Maintain proper sleep schedule</li>
+        </ul>`;
+    } else {
+        r.style.background = "#eafaf1";
+        r.style.color = "#27ae60";
+        r.innerHTML = `
+        <b>✅ No Hypertension Risk Detected</b><br><br>
+        Keep maintaining a healthy lifestyle,
+        balanced diet, and regular physical activity.
+        `;
+    }
+})
+.catch(() => {
+    result.innerText = "❌ Backend not running";
+});
+}
+</script>
+
+</body>
+</html>
