@@ -8,21 +8,21 @@
 /* ===== GLOBAL ===== */
 body {
     font-family: "Segoe UI", Tahoma, sans-serif;
-    background: linear-gradient(135deg, #74ebd5, #acb6e5, #fbc2eb);
-    
     min-height: 100vh;
     display: flex;
     justify-content: center;
     align-items: center;
+    /* colorful gradient + morning yoga image */
+    background: linear-gradient(135deg, #74ebd5, #acb6e5, #fbc2eb), url('https://source.unsplash.com/1920x1080/?sunrise,yoga') no-repeat center/cover;
 }
 
 /* ===== CARD ===== */
 .card {
-    background: white;
+    background: rgba(255, 255, 255, 0.95);
     padding: 0;
     border-radius: 18px;
     width: 500px;
-    box-shadow: 0 15px 35px rgba(0,0,0,0.25);
+    box-shadow: 0 15px 35px rgba(0,0,0,0.3);
     overflow: hidden;
 }
 
@@ -221,68 +221,87 @@ function start() {
     form.classList.remove("hidden");
 }
 
-function predict() {
-fetch("http://127.0.0.1:5000/predict", {
-    method: "POST",
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({
-        Age: Number(age.value),
-        Salt_Intake: Number(salt.value),
-        Stress_Score: Number(stress.value),
-        Physical_Activity: Number(activity.value),
-        BMI: Number(bmi.value),
-        Alcohol_Consumption: Number(alcohol.value),
-        Sleep_Duration: Number(sleep.value),
-        Diet_Quality: Number(diet.value),
-        Family_History: Number(family.value),
-        Smoking_Status: Number(smoking.value)
-    })
-})
-.then(res => res.json())
-.then(data => {
-    let r = document.getElementById("result");
+// Function to get personalized risk factors and tips
+function getRiskFactors() {
+    let reasons = [];
+    let dietTips = [];
+    let lifestyleTips = [];
 
-    if (data.prediction.includes("Has")) {
-        r.style.background = "#fdecea";
-        r.style.color = "#c0392b";
-        r.innerHTML = `
-        <b>⚠ Hypertension Risk Detected</b><br><br>
-        <b>Possible Reasons:</b>
-        <ul>
-            <li>High salt intake</li>
-            <li>Low physical activity</li>
-            <li>High stress and poor sleep</li>
-            <li>Unhealthy diet</li>
-            <li>Smoking or alcohol consumption</li>
-        </ul>
-        <b>Balanced Diet Suggestions:</b>
-        <ul>
-            <li>Fruits: Apple, banana, citrus fruits</li>
-            <li>Vegetables: Spinach, carrot, broccoli</li>
-            <li>Whole grains: Oats, brown rice</li>
-            <li>Low-fat dairy products</li>
-            <li>Reduce salt and processed foods</li>
-        </ul>
-        <b>Lifestyle Tips:</b>
-        <ul>
-            <li>Walk or exercise 30 minutes daily</li>
-            <li>Practice yoga or meditation</li>
-            <li>Quit smoking and limit alcohol</li>
-            <li>Maintain proper sleep schedule</li>
-        </ul>`;
-    } else {
-        r.style.background = "#eafaf1";
-        r.style.color = "#27ae60";
-        r.innerHTML = `
-        <b>✅ No Hypertension Risk Detected</b><br><br>
-        Keep maintaining a healthy lifestyle,
-        balanced diet, and regular physical activity.
-        `;
+    if (Number(salt.value) >= 8) reasons.push("High salt intake");
+    if (Number(activity.value) <= 3) reasons.push("Low physical activity");
+    if (Number(stress.value) >= 10 || Number(sleep.value) < 6) reasons.push("High stress and poor sleep");
+    if (Number(bmi.value) >= 28) reasons.push("Overweight or Obese BMI");
+    if (Number(diet.value) <= 3) reasons.push("Unhealthy diet");
+    if (Number(smoking.value) === 1 || Number(alcohol.value) >= 3) reasons.push("Smoking or high alcohol consumption");
+
+    // Enhanced Diet Tips
+    if (Number(diet.value) <= 3) {
+        dietTips.push("Eat more fruits and vegetables like spinach, broccoli, and citrus fruits");
+        dietTips.push("Include whole grains like oats, quinoa, and brown rice");
+        dietTips.push("Limit processed foods, sugary drinks, and high-salt items");
+        dietTips.push("Include low-fat dairy and lean proteins like fish or chicken");
+        dietTips.push("Drink plenty of water and stay hydrated");
     }
-})
-.catch(() => {
-    result.innerText = "❌ Backend not running";
-});
+
+    // Enhanced Lifestyle Tips
+    if (Number(activity.value) <= 3) lifestyleTips.push("Walk, jog, or exercise 30–60 minutes daily");
+    if (Number(stress.value) >= 10) lifestyleTips.push("Practice yoga, meditation, or deep-breathing exercises");
+    if (Number(sleep.value) < 6) lifestyleTips.push("Maintain a proper sleep schedule of 7–8 hours per night");
+    if (Number(smoking.value) === 1) lifestyleTips.push("Quit smoking and avoid second-hand smoke");
+    if (Number(alcohol.value) >= 3) lifestyleTips.push("Limit alcohol intake to occasional consumption");
+    if (Number(activity.value) > 3) lifestyleTips.push("Maintain regular physical activity for heart health");
+    if (Number(diet.value) > 3) lifestyleTips.push("Continue a balanced diet rich in fiber and vitamins");
+    if (Number(stress.value) < 10) lifestyleTips.push("Keep stress low with hobbies or relaxation techniques");
+
+    return { reasons, dietTips, lifestyleTips };
+}
+
+function predict() {
+    fetch("http://127.0.0.1:5000/predict", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+            Age: Number(age.value),
+            Salt_Intake: Number(salt.value),
+            Stress_Score: Number(stress.value),
+            Physical_Activity: Number(activity.value),
+            BMI: Number(bmi.value),
+            Alcohol_Consumption: Number(alcohol.value),
+            Sleep_Duration: Number(sleep.value),
+            Diet_Quality: Number(diet.value),
+            Family_History: Number(family.value),
+            Smoking_Status: Number(smoking.value)
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+        let r = document.getElementById("result");
+
+        if (data.prediction.includes("Has")) {
+            let { reasons, dietTips, lifestyleTips } = getRiskFactors();
+
+            r.style.background = "#fdecea";
+            r.style.color = "#c0392b";
+
+            r.innerHTML = `
+            <b>⚠ Hypertension Risk Detected</b><br><br>
+            ${reasons.length > 0 ? `<b>Possible Reasons:</b><ul>${reasons.map(x=>`<li>${x}</li>`).join('')}</ul>` : ''}
+            ${dietTips.length > 0 ? `<b>Balanced Diet Suggestions:</b><ul>${dietTips.map(x=>`<li>${x}</li>`).join('')}</ul>` : ''}
+            ${lifestyleTips.length > 0 ? `<b>Lifestyle Tips:</b><ul>${lifestyleTips.map(x=>`<li>${x}</li>`).join('')}</ul>` : ''}
+            `;
+        } else {
+            r.style.background = "#eafaf1";
+            r.style.color = "#27ae60";
+            r.innerHTML = `
+            <b>✅ No Hypertension Risk Detected</b><br><br>
+            Keep maintaining a healthy lifestyle,
+            balanced diet, and regular physical activity.
+            `;
+        }
+    })
+    .catch(() => {
+        result.innerText = "❌ Backend not running";
+    });
 }
 </script>
 
